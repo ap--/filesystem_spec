@@ -4,7 +4,7 @@ import os
 import secrets
 import shutil
 from contextlib import suppress
-from functools import cached_property, wraps
+from functools import wraps
 
 from fsspec.spec import AbstractFileSystem
 from fsspec.utils import (
@@ -53,9 +53,10 @@ class ArrowFSWrapper(AbstractFileSystem):
         self.fs = fs
         super().__init__(**kwargs)
 
-    @cached_property
+    @property
     def fsid(self):
-        return "hdfs_" + tokenize(self.fs.host, self.fs.port)
+        self.__dict__["fsid"] = fsid = "hdfs_" + tokenize(self.fs.host, self.fs.port)
+        return fsid
 
     @classmethod
     def _strip_protocol(cls, path):
