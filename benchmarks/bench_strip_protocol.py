@@ -7,19 +7,34 @@ from fsspec import get_filesystem_class
 random.seed(0)
 
 
-def _make_random_path():
+def _make_random_path(style):
     pth_len = random.randint(5, 40)
-    return "".join(random.sample(string.ascii_letters + "/", k=pth_len))
+    if style == "posix":
+        chars = string.ascii_letters + "/"
+        prefix = ""
+    elif style == "win":
+        chars = string.ascii_letters + "\\"
+        prefix = "c:\\"
+    elif style == "win-posix":
+        chars = string.ascii_letters + "/"
+        prefix = "c:/"
+    else:
+        raise ValueError(f"Unknown style {style}")
+    return prefix + "".join(random.sample(chars, k=pth_len))
 
 
 def _make_uris(n):
-    it_proto_netloc = itertools.cycle(
-        itertools.product(["file", "local", "wrong", None], ["netloc", ""])
+    it_proto_netloc_style = itertools.cycle(
+        itertools.product(
+            ["file", "local", "wrong", None],
+            ["netloc", ""],
+            ["posix", "win", "win-posix"],
+        )
     )
 
     for _ in range(n):
-        proto, netloc = next(it_proto_netloc)
-        pth = _make_random_path()
+        proto, netloc, style = next(it_proto_netloc_style)
+        pth = _make_random_path(style)
         if proto and netloc:
             yield f"{proto}://{netloc}/{pth}"
         elif proto:
